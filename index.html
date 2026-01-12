@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --primary: #1e90ff; --danger: #ff4757; --success: #2ed573; }
+        body { font-family: -apple-system, sans-serif; background: #f8f9fa; padding: 20px; color: #333; }
+        .container { max-width: 400px; margin: auto; }
+        .card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .info h4 { margin: 0; font-size: 1.1rem; }
+        .info p { margin: 4px 0 0; font-size: 0.85rem; color: #666; }
+        .days-left { background: #e1f0ff; color: var(--primary); padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        .btn-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
+        .btn-del:hover { color: var(--danger); }
+        .add-form { background: #fff; padding: 20px; border-radius: 15px; margin-top: 30px; border: 1px solid #ddd; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button.main-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎂 My Reminders</h2>
+        <div id="birthdayList"></div>
+
+        <div class="add-form">
+            <h3>Add New</h3>
+            <input type="text" id="name" placeholder="Name or Event">
+            <input type="date" id="date">
+            <button class="main-btn" onclick="addBirthday()">Save to App</button>
+        </div>
+    </div>
+
+    <script>
+        function calculateDays(date) {
+            const today = new Date();
+            const bday = new Date(date);
+            bday.setFullYear(today.getFullYear());
+            if (bday < today) bday.setFullYear(today.getFullYear() + 1);
+            const diff = bday - today;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function render() {
+            const data = JSON.parse(localStorage.getItem('birthdays') || '[]');
+            const list = document.getElementById('birthdayList');
+            // Sort by days remaining
+            data.sort((a, b) => calculateDays(a.date) - calculateDays(b.date));
+            
+            list.innerHTML = data.map((person, index) => `
+                <div class="card">
+                    <div class="info">
+                        <h4>${person.name}</h4>
+                        <p>${person.date}</p>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span class="days-left">${calculateDays(person.date)} days</span>
+                        <button class="btn-del" onclick="deleteBday(${index})">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addBirthday() {
+            const name = document.getElementById('name').value;
+            const date = document.getElementById('date').value;
+            if(!name || !date) return alert("Please fill both fields");
+            const data = JSON.parse(localStorage.getItem('birthdays') || '[]');
+            data.push({name, date});
+            localStorage.setItem('birthdays', JSON.stringify(data));
+            document.getElementById('name').value = '';
+            render();
+        }
+
+        function deleteBday(index) {
+            const data = JSON.parse(localStorage.getItem('birthdays') || '[]');
+            data.splice(index, 1);
+            localStorage.setItem('birthdays', JSON.stringify(data));
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>
